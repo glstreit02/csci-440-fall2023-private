@@ -39,9 +39,12 @@ public class Homework2 extends DBTest {
      */
     public void createGrammyInfoTable(){
         //TODO fill these in
-        executeDDL("CREATE TABLE grammy_categories(GrammyCategoryId INTEGER PRIMARY KEY, Name TEXT)");
+        executeDDL("CREATE TABLE grammy_categories(GrammyCategoryId INTEGER NOT NULL PRIMARY KEY, Name TEXT UNIQUE)");
+
         executeDDL("CREATE TABLE grammy_infos(ArtistId INTEGER, AlbumId INTEGER, TrackId INTEGER, " +
-                                             "GrammyCategoryId INTEGER, Status TEXT)");
+                   "GrammyCategoryId INTEGER, Status TEXT, " +
+                   "FOREIGN KEY (GrammyCategoryId) REFERENCES grammy_categories (GrammyCategoryId) " +
+                   "ON DELETE SET NULL)");
 
         // TEST CODE
         executeUpdate("INSERT INTO grammy_categories(Name) VALUES ('Greatest Ever');");
