@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +34,7 @@ public class Customer extends Model {
         lastName = results.getString("LastName");
         customerId = results.getLong("CustomerId");
         supportRepId = results.getLong("SupportRepId");
+        email = results.getString("Email");
     }
 
     public String getFirstName() {
@@ -60,11 +62,46 @@ public class Customer extends Model {
     }
 
     public static List<Customer> all(int page, int count) {
-        return Collections.emptyList();
+        try(Connection conn = DB.connect()) {
+            int offset = (page-1) * count;
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM customers LIMIT ? OFFSET ?");
+            x.setInt(1,count);
+            x.setInt(2,offset);
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<Customer> Customers = new ArrayList<Customer>();
+
+            while(result.next()) {
+                Customers.add(new Customer(result));
+            }
+            return Customers;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public static Customer find(long customerId) {
-        return new Customer();
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM customers WHERE CustomerId = ?");
+            x.setLong(1,customerId);
+            ResultSet result =  x.executeQuery();
+            return new Customer(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public static List<Customer> forEmployee(long employeeId) {

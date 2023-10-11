@@ -4,6 +4,7 @@ import edu.montana.csci.csci440.util.DB;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,13 +38,21 @@ public class Employee extends Model {
 
     @Override
     public boolean verify() {
-        _errors.clear(); // clear any existing errors
-        if (firstName == null || "".equals(firstName)) {
-            addError("FirstName can't be null or blank!");
+
+        _errors.clear();
+
+        if (firstName == null || firstName.isBlank()) {
+            addError("firstName can't be null or blank");
         }
-        // TODO - add in additional validations:
-        //   last name can't be null or blank
-        //   email can't be null or blank and must contain an @
+
+        if(lastName == null || lastName.isBlank()){
+            addError("lastName can't be null or blank");
+        }
+
+        if(email == null || email.isBlank() || !email.contains("@")){
+            addError("email cannot be blank and must contain the @ character");
+        }
+
         return !hasErrors();
     }
 
@@ -52,15 +61,19 @@ public class Employee extends Model {
         if (verify()) {
             try (Connection conn = DB.connect();
                  PreparedStatement stmt = conn.prepareStatement(
-                         "UPDATE employees SET FirstName=?, LastName=?, Email=? WHERE EmployeeId=?")) {
+                         "UPDATE employees SET FirstName=?, LastName=?, Title = ?, Email=? WHERE EmployeeId=?")) {
                 stmt.setString(1, this.getFirstName());
                 stmt.setString(2, this.getLastName());
                 stmt.setString(3, this.getEmail());
-                stmt.setLong(4, this.getEmployeeId());
+                stmt.setString(4,this.getTitle());
+                stmt.setLong(5, this.getEmployeeId());
                 stmt.executeUpdate();
                 return true;
-            } catch (SQLException sqlException) {
-                throw new RuntimeException(sqlException);
+            }
+            catch(SQLException e){
+                System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                        e.getSQLState());
+                return false;
             }
         } else {
             return false;
@@ -70,19 +83,29 @@ public class Employee extends Model {
     @Override
     public boolean create() {
         if (verify()) {
-            try (Connection conn = DB.connect();
-                 PreparedStatement stmt = conn.prepareStatement(
-                         "INSERT INTO employees (FirstName, LastName, Email) VALUES (?, ?, ?)")) {
-                stmt.setString(1, this.getFirstName());
-                stmt.setString(2, this.getLastName());
-                stmt.setString(3, this.getEmail());
-                stmt.executeUpdate();
-                employeeId = DB.getLastID(conn);
-                return true;
-            } catch (SQLException sqlException) {
-                throw new RuntimeException(sqlException);
+            try (Connection conn = DB.connect()){
+
+                conn.setAutoCommit(false);
+                 PreparedStatement stmt = conn.prepareStatement("INSERT INTO employees " +
+                         "(FirstName, LastName, Email, Title, ReportsTo) VALUES (?, ?, ?,?,?)");
+                 stmt.setString(1, this.getFirstName());
+                 stmt.setString(2, this.getLastName());
+                 stmt.setString(3, this.getEmail());
+                 stmt.setString(4,this.getTitle());
+                 stmt.setLong(5,this.getReportsTo());
+                 stmt.executeUpdate();
+                 conn.commit();
+
+                 this.employeeId = DB.getLastID(conn);
+                 return true;
             }
-        } else {
+            catch (SQLException e) {
+                System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                        e.getSQLState());
+                return false;
+            }
+        }
+        else {
             return false;
         }
     }
@@ -130,7 +153,7 @@ public class Employee extends Model {
         return Collections.emptyList();
     }
     public Employee getBoss() {
-        return null;
+     return find(this.reportsTo);
     }
 
     public static List<Employee> all() {
@@ -138,7 +161,30 @@ public class Employee extends Model {
     }
 
     public static List<Employee> all(int page, int count) {
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+            int offset = (page-1) * count;
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM employees LIMIT ? OFFSET ?");
+            x.setInt(1,count);
+            x.setInt(2,offset);
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<Employee> Employees = new ArrayList<Employee>();
+
+            while(result.next()) {
+                Employees.add(new Employee(result));
+            }
+            return Employees;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
+
     }
 
     public static Employee findByEmail(String newEmailAddress) {
@@ -146,15 +192,34 @@ public class Employee extends Model {
     }
 
     public static Employee find(long employeeId) {
-        return new Employee();
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM employees WHERE EmployeeId = ?");
+            x.setLong(1,employeeId);
+            ResultSet result = x.executeQuery();
+            conn.commit();
+
+            return  new Employee(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public void setTitle(String programmer) {
         title = programmer;
     }
 
+    public String getTitle(){
+        return this.title;
+    }
+
     public void setReportsTo(Employee employee) {
-        // TODO implement
+        this.reportsTo = employee.employeeId;
     }
 
     public static class SalesSummary {

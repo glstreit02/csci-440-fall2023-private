@@ -2,10 +2,8 @@ package edu.montana.csci.csci440.model;
 
 import edu.montana.csci.csci440.util.DB;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +21,77 @@ public class Album extends Model {
         title = results.getString("Title");
         albumId = results.getLong("AlbumId");
         artistId = results.getLong("ArtistId");
+    }
+
+    //Create
+
+    public boolean create(){
+
+        try(Connection conn = DB.connect()){
+
+            conn.setAutoCommit(false);
+            PreparedStatement createAlbum =conn.prepareStatement("INSERT INTO albums (Title,ArtistId) VALUES (?,?)");
+            createAlbum.setString(1,this.title);
+            createAlbum.setLong(2,this.artistId);
+            PreparedStatement getID =conn.prepareStatement("SELECT last_insert_rowID()",
+                    Statement.RETURN_GENERATED_KEYS);
+
+            createAlbum.execute();
+            getID.execute();
+            conn.commit();
+
+            ResultSet ID = getID.getGeneratedKeys();
+            if(ID.next()){
+                this.albumId = (long) ID.getInt(1);
+            }
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return false;
+        }
+        return true;
+    }
+
+    public boolean verify(){
+        _errors.clear();
+        boolean status = true;
+
+        if(this.title == null){
+            this.addError("title must not be null and be of the string data type");
+            status = false;
+        }
+
+        if(this.artistId == null){
+            this.addError("artistId must not be null and be of the long data type");
+            status = false;
+        }
+        return status;
+    }
+
+    public boolean update(){
+        try(Connection conn = DB.connect()){
+
+            if(verify()){
+                conn.setAutoCommit(false);
+                PreparedStatement updateAlbum =conn.prepareStatement("UPDATE albums SET Title = ?, " +
+                        "ArtistId = ? WHERE albumID = ?");
+
+                updateAlbum.setString(1,this.title);
+                updateAlbum.setLong(2,this.artistId);
+                updateAlbum.setLong(3, this.albumId);
+                updateAlbum.execute();
+                conn.commit();
+                return true;
+            }
+        }
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return false;
+        }
+        return true;
     }
 
     public Artist getArtist() {
@@ -62,11 +131,51 @@ public class Album extends Model {
     }
 
     public static List<Album> all(int page, int count) {
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+            int offset = (page-1) * count;
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM albums LIMIT ? OFFSET ?");
+            x.setInt(1,count);
+            x.setInt(2,offset);
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<Album> Albums = new ArrayList<Album>();
+
+            while(result.next()) {
+                Albums.add(new Album(result));
+            }
+            return Albums;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+            e.getSQLState());
+            return null;
+        }
+
     }
 
     public static Album find(long i) {
-        return new Album();
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM albums WHERE albums.AlbumId = ?");
+            x.setLong(1,i);
+            ResultSet result = x.executeQuery();
+            conn.commit();
+
+            return  new Album(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
+
     }
 
     public static List<Album> getForArtist(Long artistId) {

@@ -18,7 +18,7 @@ public class AlbumsController {
 
         post("/albums/new", (req, resp) -> {
             Album album = new Album();
-            Web.putValuesInto(album, "Title");
+            Web.putValuesInto(album, "c Title");
             if (album.create()) {
                 Web.message("Created A Album!");
                 return Web.redirect("/albums/" + album.getAlbumId());
