@@ -129,18 +129,29 @@ public class Artist extends Model {
     }
         return status;
  }
- //TODO repair update for album and then do update for artists
+
     public boolean update(){
         try(Connection conn = DB.connect()){
 
             if(verify()){
+
                 conn.setAutoCommit(false);
                 PreparedStatement updateAlbum =conn.prepareStatement("UPDATE artists SET Name = ?" +
-                        "WHERE ArtistId = ?");
+                        "WHERE artistId = ? AND Name = ?");
+
+                String origName = Artist.find(this.artistId).getName();
 
                 updateAlbum.setString(1,this.name);
                 updateAlbum.setLong(2,this.artistId);
-                updateAlbum.execute();
+                updateAlbum.setString(3,origName);
+                int isSuccess = updateAlbum.executeUpdate();
+                System.out.println(isSuccess);
+
+                if (isSuccess != 1){
+                    conn.rollback();
+                    throw new IllegalStateException("The artist name you have selected to update no longer exists!" +
+                            "a sneaky user must have changed it between reading and sending this update request");
+                }
                 conn.commit();
                 return true;
             }

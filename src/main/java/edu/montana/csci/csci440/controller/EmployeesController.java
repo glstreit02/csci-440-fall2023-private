@@ -39,6 +39,7 @@ public class EmployeesController {
 
         get("/employees/tree", (request, response) -> {
             String employeeTree = EmployeeHelper.makeEmployeeTree();
+            System.out.println(employeeTree);
             return Web.renderTemplate("templates/employees/tree.vm",
                     "employeeTree", employeeTree);
         });

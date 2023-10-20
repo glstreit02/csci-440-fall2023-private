@@ -105,7 +105,30 @@ public class Customer extends Model {
     }
 
     public static List<Customer> forEmployee(long employeeId) {
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT customers.FirstName, customers.LastName," +
+                    "customers.customerId, customers.supportRepId, customers.Email FROM customers JOIN employees " +
+                    "ON customers.SupportRepId  = employees.EmployeeId WHERE employees.EmployeeId = ? ");
+
+            x.setLong(1,employeeId);
+            ResultSet result = x.executeQuery();
+            List<Customer> customers = new ArrayList<Customer>();
+
+            while(result.next()){
+                customers.add(new Customer(result));
+            }
+
+            return customers;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
 }
