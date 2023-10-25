@@ -4,10 +4,8 @@ import edu.montana.csci.csci440.util.DB;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Collections;
+import java.util.*;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Invoice extends Model {
 
@@ -27,17 +25,52 @@ public class Invoice extends Model {
         billingAddress = results.getString("BillingAddress");
         billingState = results.getString("BillingState");
         billingCountry = results.getString("BillingCountry");
+        billingCity = results.getString("BillingCity");
         billingPostalCode = results.getString("BillingPostalCode");
         total = results.getBigDecimal("Total");
         invoiceId = results.getLong("InvoiceId");
     }
 
     public List<InvoiceItem> getInvoiceItems(){
-        //TODO implement
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM invoice_items  JOIN invoices ON invoice_items.InvoiceId = invoices.InvoiceId  WHERE invoices.InvoiceId = ?");
+            x.setLong(1,this.invoiceId);
+            ResultSet result = x.executeQuery();
+            conn.commit();
+
+            List<InvoiceItem> invoice_items = new ArrayList<InvoiceItem>();
+            while(result.next()){
+                invoice_items.add(new InvoiceItem(result));
+            }
+            return invoice_items;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
     public Customer getCustomer() {
-        return null;
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM customers  JOIN invoices ON customers.CustomerId = invoices.CustomerId  WHERE invoices.InvoiceId = ?");
+            x.setLong(1,this.invoiceId);
+            ResultSet result = x.executeQuery();
+            conn.commit();
+
+            return new Customer(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public Long getInvoiceId() {
@@ -97,10 +130,47 @@ public class Invoice extends Model {
     }
 
     public static List<Invoice> all(int page, int count) {
-        return Collections.emptyList();
+
+            try(Connection conn = DB.connect()) {
+                int offset = (page-1) * count;
+                conn.setAutoCommit(false);
+
+                PreparedStatement x = conn.prepareStatement("SELECT * FROM invoices LIMIT ? OFFSET ?");
+                x.setInt(1,count);
+                x.setInt(2,offset);
+                ResultSet result =  x.executeQuery();
+                conn.commit();
+
+                List<Invoice> invoices = new ArrayList<Invoice>();
+
+                while(result.next()) {
+                    invoices.add(new Invoice(result));
+                }
+                return invoices;
+            }
+
+            catch(SQLException e){
+                System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                        e.getSQLState());
+                return null;
+            }
     }
 
     public static Invoice find(long invoiceId) {
-        return new Invoice();
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM invoices WHERE InvoiceId = ?");
+            x.setLong(1,invoiceId);
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+            return new Invoice(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 }

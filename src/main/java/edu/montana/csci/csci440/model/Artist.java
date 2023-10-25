@@ -10,6 +10,8 @@ public class Artist extends Model {
     Long artistId;
     String name;
 
+    String oldName;
+
     public Artist() {
     }
 
@@ -35,7 +37,13 @@ public class Artist extends Model {
     }
 
     public void setName(String name) {
-        this.name = name;
+        if(this.name != null){
+            this.oldName = new String(this.name);
+            this.name = name;
+        }
+        else{
+            this.name = name;
+        }
     }
 
     public static List<Artist> all() {
@@ -90,7 +98,6 @@ public class Artist extends Model {
 
 
     }
-
     public boolean create(){
 
         try(Connection conn = DB.connect()){
@@ -143,14 +150,15 @@ public class Artist extends Model {
 
                 updateAlbum.setString(1,this.name);
                 updateAlbum.setLong(2,this.artistId);
-                updateAlbum.setString(3,origName);
+                updateAlbum.setString(3,this.oldName);
                 int isSuccess = updateAlbum.executeUpdate();
                 System.out.println(isSuccess);
 
                 if (isSuccess != 1){
                     conn.rollback();
-                    throw new IllegalStateException("The artist name you have selected to update no longer exists!" +
+                    addError("The artist name you have selected to update no longer exists!" +
                             "a sneaky user must have changed it between reading and sending this update request");
+                    return false;
                 }
                 conn.commit();
                 return true;

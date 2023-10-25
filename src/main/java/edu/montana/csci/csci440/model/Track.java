@@ -1,19 +1,14 @@
 package edu.montana.csci.csci440.model;
 
 import edu.montana.csci.csci440.util.DB;
+import org.apache.commons.lang.StringUtils;
 import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public class Track extends Model {
 
@@ -22,6 +17,7 @@ public class Track extends Model {
     private Long mediaTypeId;
     private Long genreId;
     private String name;
+    private String oldName;
     private Long milliseconds;
     private Long bytes;
     private BigDecimal unitPrice;
@@ -36,7 +32,7 @@ public class Track extends Model {
         unitPrice = new BigDecimal("0");
     }
 
-    private Track(ResultSet results) throws SQLException {
+    public Track(ResultSet results) throws SQLException {
         name = results.getString("Name");
         milliseconds = results.getLong("Milliseconds");
         bytes = results.getLong("Bytes");
@@ -47,16 +43,174 @@ public class Track extends Model {
         genreId = results.getLong("GenreId");
     }
 
+    public boolean create(){
+
+        try(Connection conn = DB.connect()){
+
+            conn.setAutoCommit(false);
+            PreparedStatement createTrack =conn.prepareStatement("INSERT INTO tracks (Name,AlbumId,MediaTypeId,GenreId,Milliseconds,Bytes,UnitPrice) " +
+                    "VALUES (?,?,?,?,?,?,?)");
+
+
+            createTrack.setString(1,this.name);
+            createTrack.setLong(2,this.albumId);
+            createTrack.setLong(3,this.mediaTypeId);
+            createTrack.setLong(4,this.genreId);
+            createTrack.setLong(5,this.milliseconds);
+            createTrack.setLong(6,this.bytes);
+            createTrack.setBigDecimal(7,this.unitPrice);
+
+            PreparedStatement getID =conn.prepareStatement("SELECT last_insert_rowID()",
+                    Statement.RETURN_GENERATED_KEYS);
+
+            createTrack.execute();
+            getID.execute();
+            conn.commit();
+
+            ResultSet ID = getID.getGeneratedKeys();
+            if(ID.next()){
+                this.trackId = (long) ID.getInt(1);
+            }
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return false;
+        }
+        return true;
+    }
+
+    public void delete(){
+
+        try(Connection conn = DB.connect()){
+            conn.setAutoCommit(false);
+            PreparedStatement createTrack =conn.prepareStatement("DELETE FROM tracks WHERE tracks.TrackId = ? ");
+            createTrack.setLong(1,this.trackId);
+            createTrack.execute();
+            conn.commit();
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+        }
+    }
+
+    public boolean update(){
+        try(Connection conn = DB.connect()){
+
+            if(verify()){
+
+                conn.setAutoCommit(false);
+                PreparedStatement updateAlbum =conn.prepareStatement("UPDATE tracks SET Name = ?, AlbumId = ?, " +
+                        "MediaTypeId = ?, GenreId = ?, Milliseconds = ?, Bytes = ?, UnitPrice = ?" +
+                        "WHERE TrackId = ? AND Name = ?");
+
+                String origName = Track.find(this.trackId).getName();
+
+                updateAlbum.setString(1,this.name);
+                updateAlbum.setLong(2,this.albumId);
+                updateAlbum.setLong(3,this.mediaTypeId);
+                updateAlbum.setLong(4,this.genreId);
+                updateAlbum.setLong(5,this.milliseconds);
+                updateAlbum.setLong(6,this.bytes);
+                updateAlbum.setBigDecimal(7,this.unitPrice);
+                updateAlbum.setLong(8,this.trackId);
+                updateAlbum.setString(9,this.oldName);
+
+                int isSuccess = updateAlbum.executeUpdate();
+
+                if (isSuccess != 1){
+                    conn.rollback();
+                    addError("The artist name you have selected to update no longer exists!" +
+                            "a sneaky user must have changed it between reading and sending this update request");
+                    return false;
+                }
+                conn.commit();
+                return true;
+            }
+        }
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return false;
+        }
+        return true;
+    }
+
+
+
+    public boolean verify(){
+        _errors.clear();
+        boolean status = true;
+
+        if(this.name == null){
+            this.addError("name must not be null and be of the string data type");
+            status = false;
+        }
+
+        if(this.albumId == null){
+            this.addError("albumID must not be null and be of the string data type");
+            status = false;
+        }
+
+        return status;
+    }
+
     public static Track find(long i) {
-        return new Track();
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM tracks WHERE trackId = ?");
+            x.setLong(1,i);
+            ResultSet result =  x.executeQuery();
+
+            System.out.println(result.next());
+
+            return new Track(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public static Long count() {
-        return 0L;
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT COUNT(*) as trackCount FROM tracks");
+            ResultSet result =  x.executeQuery();
+            return result.getLong("trackCount");
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public Album getAlbum() {
-        return Album.find(albumId);
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM albums " +
+                    "JOIN tracks ON albums.AlbumId = tracks.AlbumId WHERE tracks.TrackId = ?");
+            x.setLong(1,this.trackId);
+            ResultSet result =  x.executeQuery();
+            return new Album(result);
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public MediaType getMediaType() {
@@ -66,7 +220,30 @@ public class Track extends Model {
         return null;
     }
     public List<Playlist> getPlaylists(){
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM playlists " +
+                    "JOIN playlist_track ON playlist_track.PlaylistId = playlists.PlaylistId " +
+                    "JOIN tracks ON playlist_track.TrackId = tracks.TrackId WHERE tracks.TrackId = ?");
+            x.setLong(1,this.trackId);
+            ResultSet result =  x.executeQuery();
+            List<Playlist> playlists = new ArrayList<Playlist>();
+            while(result.next()){
+                playlists.add(new Playlist(result));
+
+            }
+            return playlists;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
+
+
     }
 
     public Long getTrackId() {
@@ -82,7 +259,14 @@ public class Track extends Model {
     }
 
     public void setName(String name) {
-        this.name = name;
+
+        if(this.name == null) {
+            this.name = name;
+        }
+        else{
+            this.oldName = new String(this.name);
+            this.name = name;
+        }
     }
 
     public Long getMilliseconds() {
@@ -152,7 +336,79 @@ public class Track extends Model {
     public static List<Track> advancedSearch(int page, int count,
                                              String search, Integer artistId, Integer albumId,
                                              Integer maxRuntime, Integer minRuntime) {
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+
+            int offset = (page-1) * count;
+            conn.setAutoCommit(false);
+            String begin = "SELECT * FROM tracks";
+            String end = " LIMIT ? OFFSET ?";
+            String joins = "";
+            List<String> where = new ArrayList<String>();
+            String wheres = "";
+            List<Object> mysteryValues = new ArrayList<Object>();
+
+            if(!Objects.isNull(artistId)){
+                joins += " JOIN albums ON tracks.AlbumId = albums.AlbumId " +
+                        "JOIN artists ON artists.ArtistId = albums.ArtistId ";
+                where.add("artists.ArtistId = ? ");
+                mysteryValues.add(artistId);
+            }
+
+            if(!StringUtils.isEmpty(search)){
+                where.add("tracks.Name LIKE ?");
+                mysteryValues.add(new String("%" + search +"%"));
+            }
+
+            if(!Objects.isNull(albumId)){
+                where.add("albums.albumId =  ?");
+                mysteryValues.add(albumId);
+            }
+
+            if(!Objects.isNull(maxRuntime)){
+                where.add("tracks.Milliseconds < ?");
+                mysteryValues.add(maxRuntime);
+            }
+
+            if(!Objects.isNull(minRuntime)){
+                where.add("tracks.Milliseconds > ?");
+                mysteryValues.add(minRuntime);
+            }
+
+
+            if(where.size() >0){ wheres += "WHERE " + where.get(0);}
+
+            for(int i =1; i<where.size(); i++){
+                wheres += " AND " + where.get(i);
+            }
+
+           String query = begin+joins+wheres+end;
+
+            PreparedStatement x = conn.prepareStatement(query);
+            for(int i = 0; i<mysteryValues.size();i++){
+                x.setObject(i+1,mysteryValues.get(i));
+            }
+
+            x.setInt(mysteryValues.size()+1,count);
+            x.setInt(mysteryValues.size()+2,offset);
+            System.out.println(x);
+
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<Track> tracks = new ArrayList<Track>();
+
+           while(result.next()) {
+                tracks.add(new Track(result));
+            }
+            return tracks;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     public static List<Track> search(int page, int count, String orderBy, String search) {
@@ -173,7 +429,38 @@ public class Track extends Model {
     }
 
     public static List<Track> all(int page, int count, String orderBy) {
-        return Collections.emptyList();
+
+        List<String> validColValues =  Arrays.asList("Name", "AlbumId", "MediaTypeId", "GenreID", "Milliseconds", "Bytes", "UnitPrice");
+        try(Connection conn = DB.connect()) {
+
+            int offset = (page-1) * count;
+            conn.setAutoCommit(false);
+
+            if(!validColValues.contains(orderBy)){
+                return null;
+            }
+
+            String query = "SELECT * FROM tracks ORDER BY " + orderBy + " LIMIT ? OFFSET ?";
+            PreparedStatement x = conn.prepareStatement(query);
+            x.setInt(1,count);
+            x.setInt(2,offset);
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<Track> tracks = new ArrayList<Track>();
+
+            while(result.next()) {
+                tracks.add(new Track(result));
+            }
+            System.out.println(tracks.get(0).getName());
+            return tracks;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
 }

@@ -27,9 +27,8 @@ public class Customer extends Model {
         return Collections.emptyList();
     }
 
-    public Customer(){
-    }
-    private Customer(ResultSet results) throws SQLException {
+
+    public Customer(ResultSet results) throws SQLException {
         firstName = results.getString("FirstName");
         lastName = results.getString("LastName");
         customerId = results.getLong("CustomerId");

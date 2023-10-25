@@ -53,6 +53,7 @@ public class Web {
             Class<?> clazz = obj.getClass();
             for (String property : properties) {
                 Method method = findMethod(clazz, "set" + property);
+                System.out.println(method);
                 if (method.getParameterTypes()[0] == Integer.class || method.getParameterTypes()[0] == Integer.TYPE) {
                     int i = Integer.parseInt(req.queryParams(property));
                     method.invoke(obj, i);

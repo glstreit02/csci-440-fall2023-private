@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +35,26 @@ public class MediaType extends Model {
     }
 
     public static List<MediaType> all() {
-        return Collections.emptyList();
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM media_types");
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<MediaType> mediaTypes = new ArrayList<MediaType>();
+
+            while(result.next()) {
+                mediaTypes.add(new MediaType(result));
+            }
+            return mediaTypes;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
 }

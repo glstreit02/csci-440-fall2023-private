@@ -17,7 +17,7 @@ public class Album extends Model {
     public Album() {
     }
 
-    private Album(ResultSet results) throws SQLException {
+    public Album(ResultSet results) throws SQLException {
         title = results.getString("Title");
         albumId = results.getLong("AlbumId");
         artistId = results.getLong("ArtistId");
