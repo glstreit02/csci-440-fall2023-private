@@ -1,0 +1,157 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< cs.msu.edu:CSCI_440_Project >---------------------
+[INFO] Building CSCI_440_Project 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ CSCI_440_Project ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 33 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.1:compile (default-compile) @ CSCI_440_Project ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ CSCI_440_Project ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 3 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.1:testCompile (default-testCompile) @ CSCI_440_Project ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:2.22.1:test (default-test) @ CSCI_440_Project ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running edu.montana.csci.csci440.model.InvoicesTest
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.28 s - in edu.montana.csci.csci440.model.InvoicesTest
+[INFO] Running edu.montana.csci.csci440.model.TrackTest
+true
+Resetting DB After Test...
+É Uma Partida De Futebol
+Resetting DB After Test...
+false
+ResultSet closed
+0
+null
+Resetting DB After Test...
+true
+Resetting DB After Test...
+Resetting DB After Test...
+true
+true
+true
+Resetting DB After Test...
+Resetting DB After Test...
+SELECT * FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId JOIN artists ON artists.ArtistId = albums.ArtistId WHERE artists.ArtistId = ?  LIMIT ? OFFSET ? 
+ parameters=[1, 1000, 0]
+SELECT * FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId JOIN artists ON artists.ArtistId = albums.ArtistId WHERE artists.ArtistId = ?  AND tracks.Name LIKE ? LIMIT ? OFFSET ? 
+ parameters=[1, %a%, 1000, 0]
+SELECT * FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId JOIN artists ON artists.ArtistId = albums.ArtistId WHERE artists.ArtistId = ?  AND tracks.Name LIKE ? AND albums.albumId =  ? LIMIT ? OFFSET ? 
+ parameters=[1, %a%, 1, 1000, 0]
+SELECT * FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId JOIN artists ON artists.ArtistId = albums.ArtistId WHERE artists.ArtistId = ?  AND tracks.Name LIKE ? AND albums.albumId =  ? AND tracks.Milliseconds < ? LIMIT ? OFFSET ? 
+ parameters=[1, %a%, 1, 280000, 1000, 0]
+SELECT * FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId JOIN artists ON artists.ArtistId = albums.ArtistId WHERE artists.ArtistId = ?  AND tracks.Name LIKE ? AND albums.albumId =  ? AND tracks.Milliseconds < ? AND tracks.Milliseconds > ? LIMIT ? OFFSET ? 
+ parameters=[1, %a%, 1, 280000, 220000, 1000, 0]
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+true
+Resetting DB After Test...
+[ERROR] Tests run: 12, Failures: 3, Errors: 2, Skipped: 0, Time elapsed: 0.048 s <<< FAILURE! - in edu.montana.csci.csci440.model.TrackTest
+[ERROR] testAlbumNameIsStoredOnTrack  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <10> but was: <11>
+	at edu.montana.csci.csci440.model.TrackTest.testAlbumNameIsStoredOnTrack(TrackTest.java:96)
+
+[ERROR] testAllLoadsAllAlbums  Time elapsed: 0.002 s  <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.List.size()" because "all" is null
+	at edu.montana.csci.csci440.model.TrackTest.testAllLoadsAllAlbums(TrackTest.java:16)
+
+[ERROR] trackCountIsCachedInRedis  Time elapsed: 0.002 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <34> but was: <35>
+	at edu.montana.csci.csci440.model.TrackTest.trackCountIsCachedInRedis(TrackTest.java:120)
+
+[ERROR] testPagingWorks  Time elapsed: 0.002 s  <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.List.size()" because the return value of "edu.montana.csci.csci440.model.Track.all(int, int)" is null
+	at edu.montana.csci.csci440.model.TrackTest.testPagingWorks(TrackTest.java:21)
+
+[ERROR] testArtistNameIsStoredOnTrack  Time elapsed: 0.002 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <37> but was: <39>
+	at edu.montana.csci.csci440.model.TrackTest.testArtistNameIsStoredOnTrack(TrackTest.java:87)
+
+[INFO] Running edu.montana.csci.csci440.model.PlaylistsTest
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s - in edu.montana.csci.csci440.model.PlaylistsTest
+[INFO] Running edu.montana.csci.csci440.model.AlbumTest
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s - in edu.montana.csci.csci440.model.AlbumTest
+[INFO] Running edu.montana.csci.csci440.model.EmployeeTest
+database in auto-commit mode
+0
+null
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+3
+Resetting DB After Test...
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in edu.montana.csci.csci440.model.EmployeeTest
+[INFO] Running edu.montana.csci.csci440.model.ArtistTest
+1
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+1
+0
+Resetting DB After Test...
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s - in edu.montana.csci.csci440.model.ArtistTest
+[INFO] Running edu.montana.csci.csci440.model.CustomerTest
+Resetting DB After Test...
+Resetting DB After Test...
+Resetting DB After Test...
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s - in edu.montana.csci.csci440.model.CustomerTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   TrackTest.testAlbumNameIsStoredOnTrack:96 expected: <10> but was: <11>
+[ERROR]   TrackTest.testArtistNameIsStoredOnTrack:87 expected: <37> but was: <39>
+[ERROR]   TrackTest.trackCountIsCachedInRedis:120 expected: <34> but was: <35>
+[ERROR] Errors: 
+[ERROR]   TrackTest.testAllLoadsAllAlbums:16 NullPointer Cannot invoke "java.util.List.s...
+[ERROR]   TrackTest.testPagingWorks:21 NullPointer Cannot invoke "java.util.List.size()"...
+[INFO] 
+[ERROR] Tests run: 39, Failures: 3, Errors: 2, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.542 s
+[INFO] Finished at: 2023-11-03T11:18:23-06:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.1:test (default-test) on project CSCI_440_Project: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/carson/Projects/msu/csci-440-fall2023/grading/scripts/repos/garrett_streit/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
