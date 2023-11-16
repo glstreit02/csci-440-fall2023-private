@@ -1,6 +1,7 @@
 package edu.montana.csci.csci440.model;
 
 import edu.montana.csci.csci440.util.DB;
+import redis.clients.jedis.Jedis;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -69,7 +70,6 @@ public class Album extends Model {
         }
         return status;
     }
-
     public boolean update(){
         try(Connection conn = DB.connect()){
 
@@ -94,6 +94,22 @@ public class Album extends Model {
         return true;
     }
 
+    public void delete(){
+
+        try(Connection conn = DB.connect()){
+            conn.setAutoCommit(false);
+            PreparedStatement deleteAlbum =conn.prepareStatement("DELETE FROM albums WHERE albums.AlbumId = ? ");
+            deleteAlbum.setLong(1,this.albumId);
+            deleteAlbum.execute();
+            conn.commit();
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+        }
+    }
+
     public Artist getArtist() {
         return Artist.find(artistId);
     }
@@ -102,6 +118,9 @@ public class Album extends Model {
         artistId = artist.getArtistId();
     }
 
+    public void setArtistId(Long ID){
+        artistId = ID;
+    }
     public List<Track> getTracks() {
         return Track.forAlbum(albumId);
     }

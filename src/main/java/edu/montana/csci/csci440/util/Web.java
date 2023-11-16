@@ -49,11 +49,12 @@ public class Web {
 
     public static void putValuesInto(Object obj, String... properties) {
         Request req = getRequest();
+        System.out.println(req);
         try {
             Class<?> clazz = obj.getClass();
             for (String property : properties) {
                 Method method = findMethod(clazz, "set" + property);
-                System.out.println(method);
+                System.out.println(property);
                 if (method.getParameterTypes()[0] == Integer.class || method.getParameterTypes()[0] == Integer.TYPE) {
                     int i = Integer.parseInt(req.queryParams(property));
                     method.invoke(obj, i);

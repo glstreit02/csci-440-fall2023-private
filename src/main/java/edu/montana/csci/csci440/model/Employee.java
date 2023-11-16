@@ -90,6 +90,7 @@ public class Employee extends Model {
     public boolean update() {
         if (verify()) {
             try (Connection conn = DB.connect()){
+                conn.setAutoCommit(false);
 
                 PreparedStatement stmt = conn.prepareStatement(
                          "UPDATE employees SET FirstName=?, LastName=?, " +
@@ -165,6 +166,18 @@ public class Employee extends Model {
 
     @Override
     public void delete() {
+        try(Connection conn = DB.connect()){
+            conn.setAutoCommit(false);
+            PreparedStatement deleteEmployee =conn.prepareStatement("DELETE FROM employees WHERE employees.EmployeeId = ? ");
+            deleteEmployee.setLong(1,this.employeeId);
+            deleteEmployee.execute();
+            conn.commit();
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+        }
     }
 
     public String getFirstName() {

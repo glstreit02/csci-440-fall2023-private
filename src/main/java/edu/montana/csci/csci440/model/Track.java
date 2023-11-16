@@ -21,7 +21,8 @@ public class Track extends Model {
     private Long milliseconds;
     private Long bytes;
     private BigDecimal unitPrice;
-
+    private String artistName;
+    private String albumName;
     public static final String REDIS_CACHE_KEY = "cs440-tracks-count-cache";
 
     public Track() {
@@ -41,6 +42,8 @@ public class Track extends Model {
         albumId = results.getLong("AlbumId");
         mediaTypeId = results.getLong("MediaTypeId");
         genreId = results.getLong("GenreId");
+        artistName = results.getString("ArtistName");
+        albumName = results.getString("AlbumName");
     }
 
     public boolean create(){
@@ -71,6 +74,8 @@ public class Track extends Model {
             if(ID.next()){
                 this.trackId = (long) ID.getInt(1);
             }
+            Jedis jedis = new Jedis();
+            jedis.del(REDIS_CACHE_KEY);
         }
 
         catch(SQLException e){
@@ -89,6 +94,8 @@ public class Track extends Model {
             createTrack.setLong(1,this.trackId);
             createTrack.execute();
             conn.commit();
+            Jedis jedis = new Jedis();
+            jedis.del(REDIS_CACHE_KEY);
         }
 
         catch(SQLException e){
@@ -162,12 +169,12 @@ public class Track extends Model {
         try(Connection conn = DB.connect()) {
 
             conn.setAutoCommit(false);
-            PreparedStatement x = conn.prepareStatement("SELECT * FROM tracks WHERE trackId = ?");
+            PreparedStatement x = conn.prepareStatement("SELECT tracks.TrackId as TrackId, tracks.AlbumId as AlbumId, tracks.MediaTypeId as MediaTypeId, " +
+                    "tracks.GenreId as GenreId, tracks.UnitPrice as UnitPrice, tracks.Name as Name, tracks.Milliseconds as Milliseconds, tracks.Bytes as Bytes, artists.Name as ArtistName, " +
+                    "albums.Title as AlbumName FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId " +
+                    "JOIN artists ON artists.ArtistId = albums.ArtistId WHERE trackId = ?");
             x.setLong(1,i);
             ResultSet result =  x.executeQuery();
-
-            System.out.println(result.next());
-
             return new Track(result);
         }
 
@@ -179,12 +186,22 @@ public class Track extends Model {
     }
 
     public static Long count() {
+
+       Jedis jedis = new Jedis();
+        String stringCount = jedis.get(REDIS_CACHE_KEY);
+
+        if (stringCount != null){
+           return Long.parseLong(stringCount);
+       }
+
         try(Connection conn = DB.connect()) {
 
             conn.setAutoCommit(false);
             PreparedStatement x = conn.prepareStatement("SELECT COUNT(*) as trackCount FROM tracks");
             ResultSet result =  x.executeQuery();
-            return result.getLong("trackCount");
+            Long count = result.getLong("trackCount");
+            jedis.set(REDIS_CACHE_KEY,String.valueOf(count));
+            return count;
         }
 
         catch(SQLException e){
@@ -322,15 +339,11 @@ public class Track extends Model {
     }
 
     public String getArtistName() {
-        // TODO implement more efficiently
-        //  hint: cache on this model object
-        return getAlbum().getArtist().getName();
+        return this.artistName;
     }
 
     public String getAlbumTitle() {
-        // TODO implement more efficiently
-        //  hint: cache on this model object
-        return getAlbum().getTitle();
+        return this.albumName;
     }
 
     public static List<Track> advancedSearch(int page, int count,
@@ -341,16 +354,16 @@ public class Track extends Model {
 
             int offset = (page-1) * count;
             conn.setAutoCommit(false);
-            String begin = "SELECT * FROM tracks";
+            String begin = "SELECT tracks.TrackId as TrackId, tracks.AlbumId as AlbumId, tracks.MediaTypeId as MediaTypeId," +
+                    " tracks.GenreId as GenreId, tracks.UnitPrice as UnitPrice, tracks.Name as Name, tracks.Milliseconds as Milliseconds, tracks.Bytes as Bytes, artists.Name as ArtistName," +
+                    " albums.Title as AlbumName FROM tracks";
             String end = " LIMIT ? OFFSET ?";
-            String joins = "";
+            String joins = " JOIN albums ON tracks.AlbumId = albums.AlbumId JOIN artists ON artists.ArtistId = albums.ArtistId ";
             List<String> where = new ArrayList<String>();
             String wheres = "";
             List<Object> mysteryValues = new ArrayList<Object>();
 
             if(!Objects.isNull(artistId)){
-                joins += " JOIN albums ON tracks.AlbumId = albums.AlbumId " +
-                        "JOIN artists ON artists.ArtistId = albums.ArtistId ";
                 where.add("artists.ArtistId = ? ");
                 mysteryValues.add(artistId);
             }
@@ -361,7 +374,7 @@ public class Track extends Model {
             }
 
             if(!Objects.isNull(albumId)){
-                where.add("albums.albumId =  ?");
+                where.add("tracks.AlbumId =  ?");
                 mysteryValues.add(albumId);
             }
 
@@ -376,13 +389,14 @@ public class Track extends Model {
             }
 
 
-            if(where.size() >0){ wheres += "WHERE " + where.get(0);}
+            if(where.size() >0){ wheres += " WHERE " + where.get(0);}
 
             for(int i =1; i<where.size(); i++){
                 wheres += " AND " + where.get(i);
             }
 
            String query = begin+joins+wheres+end;
+            System.out.println(query);
 
             PreparedStatement x = conn.prepareStatement(query);
             for(int i = 0; i<mysteryValues.size();i++){
@@ -412,11 +426,72 @@ public class Track extends Model {
     }
 
     public static List<Track> search(int page, int count, String orderBy, String search) {
-        return Collections.emptyList();
+
+        List<String> validColValues =  Arrays.asList("Name", "TrackId", "AlbumId", "MediaTypeId", "GenreID", "Milliseconds", "Bytes", "UnitPrice",null);
+        System.out.println(orderBy);
+        if(!validColValues.contains(orderBy)){
+            System.out.println("Invalid value for orderBy parameter");
+            return null;
+        }
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT tracks.TrackId as TrackId, tracks.AlbumId as AlbumId, tracks.MediaTypeId as MediaTypeId, " +
+                    "tracks.GenreId as GenreId, tracks.UnitPrice as UnitPrice, tracks.Name as Name, tracks.Milliseconds as Milliseconds, tracks.Bytes as Bytes, artists.Name as ArtistName, " +
+                    "albums.Title as AlbumName FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId " +
+                    "JOIN artists ON artists.ArtistId = albums.ArtistId " +
+                    "WHERE tracks.Name LIKE ? ORDER BY ? LIMIT ? OFFSET ?");
+
+            int offset = (page-1) * count;
+
+            search = new String("%" + search + "%");
+            x.setString(1,search);
+            x.setString(2,orderBy);
+            x.setLong(3,count);
+            x.setLong(4,offset);
+            ResultSet result = x.executeQuery();
+            List<Track> tracks = new ArrayList<Track>();
+
+            while(result.next()){
+                tracks.add(new Track(result));
+            }
+            System.out.println("TrackSize: " + tracks.size() + " " + count + " " + offset);
+            return tracks;
+        }
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
+
     }
 
     public static List<Track> forAlbum(Long albumId) {
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT tracks.TrackId as TrackId, tracks.AlbumId as AlbumId, tracks.MediaTypeId as MediaTypeId, " +
+                    " tracks.GenreId as GenreId, tracks.UnitPrice as UnitPrice, tracks.Name as Name, tracks.Milliseconds as Milliseconds, tracks.Bytes as Bytes, artists.Name as ArtistName, " +
+                    " albums.Title as AlbumName FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId " +
+                    " JOIN artists ON artists.ArtistId = albums.ArtistId WHERE albums.AlbumId = ? ");
+
+            x.setLong(1, albumId);
+            ResultSet result = x.executeQuery();
+            List<Track> tracks = new ArrayList<Track>();
+
+            while(result.next()){
+                tracks.add(new Track(result));
+            }
+
+            return tracks;
+        }
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
     // Sure would be nice if java supported default parameter values
@@ -430,17 +505,21 @@ public class Track extends Model {
 
     public static List<Track> all(int page, int count, String orderBy) {
 
-        List<String> validColValues =  Arrays.asList("Name", "AlbumId", "MediaTypeId", "GenreID", "Milliseconds", "Bytes", "UnitPrice");
+        List<String> validColValues =  Arrays.asList("Name", "TrackId", "AlbumId", "MediaTypeId", "GenreID", "Milliseconds", "Bytes", "UnitPrice",null);
         try(Connection conn = DB.connect()) {
 
             int offset = (page-1) * count;
             conn.setAutoCommit(false);
 
             if(!validColValues.contains(orderBy)){
+                System.out.println("Invalid value for orderBy parameter");
                 return null;
             }
 
-            String query = "SELECT * FROM tracks ORDER BY " + orderBy + " LIMIT ? OFFSET ?";
+            String query = "SELECT tracks.TrackId as TrackId, tracks.AlbumId as AlbumId, tracks.MediaTypeId as MediaTypeId, " +
+                    " tracks.GenreId as GenreId, tracks.UnitPrice as UnitPrice, tracks.Name as Name, tracks.Milliseconds as Milliseconds, tracks.Bytes as Bytes, artists.Name as ArtistName, " +
+                    " albums.Title as AlbumName FROM tracks JOIN albums ON tracks.AlbumId = albums.AlbumId" +
+                    " JOIN artists ON artists.ArtistId = albums.ArtistId ORDER BY " + orderBy + " LIMIT ? OFFSET ?";
             PreparedStatement x = conn.prepareStatement(query);
             x.setInt(1,count);
             x.setInt(2,offset);
@@ -452,7 +531,6 @@ public class Track extends Model {
             while(result.next()) {
                 tracks.add(new Track(result));
             }
-            System.out.println(tracks.get(0).getName());
             return tracks;
         }
 
