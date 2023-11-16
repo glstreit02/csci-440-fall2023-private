@@ -30,9 +30,13 @@ public class Playlist extends Model {
         try(Connection conn = DB.connect()) {
 
             conn.setAutoCommit(false);
-            PreparedStatement x = conn.prepareStatement("SELECT * FROM tracks " +
-                    "JOIN playlist_track ON playlist_track.trackId = tracks.trackId" +
-                    " JOIN playlists ON playlists.PlaylistId = playlist_track.PlaylistId " +
+            PreparedStatement x = conn.prepareStatement("SELECT tracks.TrackId as TrackId, tracks.AlbumId as AlbumId, " +
+                    "tracks.MediaTypeId as MediaTypeId, tracks.GenreId as GenreId, tracks.UnitPrice as UnitPrice, tracks.Name as Name, " +
+                    "tracks.Milliseconds as Milliseconds, tracks.Bytes as Bytes, artists.Name as ArtistName, albums.Title as AlbumName FROM tracks " +
+                    "JOIN playlist_track ON playlist_track.trackId = tracks.trackId " +
+                    "JOIN playlists ON playlists.PlaylistId = playlist_track.PlaylistId " +
+                    "JOIN albums ON albums.AlbumId = tracks.AlbumId " +
+                    "JOIN artists ON artists.ArtistId = albums.ArtistId " +
                     "WHERE playlists.PlaylistId = ? ORDER BY tracks.Name ASC");
 
             x.setLong(1,this.playlistId);

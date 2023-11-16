@@ -24,7 +24,27 @@ public class Customer extends Model {
     }
 
     public List<Invoice> getInvoices(){
-        return Collections.emptyList();
+
+        try(Connection conn = DB.connect()) {
+            conn.setAutoCommit(false);
+            PreparedStatement x = conn.prepareStatement("SELECT * FROM invoices WHERE CustomerId = ? ");
+            x.setLong(1,this.customerId);
+            ResultSet result =  x.executeQuery();
+            conn.commit();
+
+            List<Invoice> Invoices = new ArrayList<Invoice>();
+
+            while(result.next()) {
+                Invoices.add(new Invoice(result));
+            }
+            return Invoices;
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+            return null;
+        }
     }
 
 

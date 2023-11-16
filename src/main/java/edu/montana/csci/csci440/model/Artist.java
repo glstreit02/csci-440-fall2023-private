@@ -1,6 +1,7 @@
 package edu.montana.csci.csci440.model;
 
 import edu.montana.csci.csci440.util.DB;
+import redis.clients.jedis.Jedis;
 
 import java.sql.*;
 import java.util.*;
@@ -136,6 +137,22 @@ public class Artist extends Model {
     }
         return status;
  }
+
+    public void delete(){
+
+        try(Connection conn = DB.connect()){
+            conn.setAutoCommit(false);
+            PreparedStatement deleteArtist =conn.prepareStatement("DELETE FROM artists WHERE artists.ArtistId = ? ");
+            deleteArtist.setLong(1,this.artistId);
+            deleteArtist.execute();
+            conn.commit();
+        }
+
+        catch(SQLException e){
+            System.out.println(e.getMessage() + "\n" + e.getErrorCode() + "\n" +
+                    e.getSQLState());
+        }
+    }
 
     public boolean update(){
         try(Connection conn = DB.connect()){

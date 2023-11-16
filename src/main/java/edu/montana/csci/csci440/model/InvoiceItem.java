@@ -11,6 +11,9 @@ public class InvoiceItem extends Model {
     Long trackId;
     BigDecimal unitPrice;
     Long quantity;
+    String TrackName;
+    String AlbumName;
+    String ArtistName;
 
     public InvoiceItem(ResultSet result) throws SQLException {
         invoiceLineId = result.getLong("InvoiceLineId");
@@ -18,9 +21,25 @@ public class InvoiceItem extends Model {
         trackId = result.getLong("TrackId");
         unitPrice = result.getBigDecimal("UnitPrice");
         quantity = result.getLong("Quantity");
+
+        Track invItem = Track.find(trackId);
+        TrackName = invItem.getName();
+        AlbumName = invItem.getAlbumTitle();
+        ArtistName = invItem.getArtistName();
     }
     public Track getTrack() {
         return null;
+    }
+
+    public String getArtistName(){
+        return ArtistName;
+    }
+    public String getAlbumName(){
+        return AlbumName;
+    }
+
+    public String getTrackName(){
+        return TrackName;
     }
     public Invoice getInvoice() {
         return null;

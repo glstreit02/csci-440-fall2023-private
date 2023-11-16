@@ -27,6 +27,35 @@
         <td><a href="/employees/$!customer.SupportRepId">$!customer.SupportRep.Email</a> </td>
     </tr>
     </tbody>
+
+</table>
+
+<h4>Invoices</h4>
+<table>
+    <thead>
+    <tr>
+        <th>Invoice ID</th>
+        <th>Billing Address</th>
+        <th>Billing City</th>
+        <th>Billing State</th>
+        <th>Billing Country</th>
+        <th>Billing Postal Code</th>
+        <th>Total</th>
+    </tr>
+    </thead>
+    <tbody>
+        #foreach( $invoice in $customer.invoices )
+        <tr>
+            <td><a href="/invoices/$invoice.InvoiceId">$invoice.InvoiceId</a></td>
+            <td>$!invoice.billingAddress</td>
+            <td>$!invoice.billingCity</td>
+            <td>$!invoice.billingState</td>
+            <td>$!invoice.billingCountry</td>
+            <td>$!invoice.billingPostalCode</td>
+            <td>$!invoice.Total</td>
+        </tr>
+        #end
+    </tbody>
 </table>
 
 <a href="/customers/$customer.CustomerId/edit">[Edit Customer]</a>
