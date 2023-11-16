@@ -28,7 +28,7 @@
 Resetting DB After Test...
 Resetting DB After Test...
 Resetting DB After Test...
-[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.226 s - in edu.montana.csci.csci440.model.InvoicesTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.25 s - in edu.montana.csci.csci440.model.InvoicesTest
 [INFO] Running edu.montana.csci.csci440.model.TrackTest
 true
 Resetting DB After Test...
@@ -63,8 +63,8 @@ Resetting DB After Test...
 Resetting DB After Test...
 true
 Resetting DB After Test...
-[ERROR] Tests run: 12, Failures: 3, Errors: 2, Skipped: 0, Time elapsed: 0.055 s <<< FAILURE! - in edu.montana.csci.csci440.model.TrackTest
-[ERROR] testAlbumNameIsStoredOnTrack  Time elapsed: 0.007 s  <<< FAILURE!
+[ERROR] Tests run: 12, Failures: 3, Errors: 2, Skipped: 0, Time elapsed: 0.044 s <<< FAILURE! - in edu.montana.csci.csci440.model.TrackTest
+[ERROR] testAlbumNameIsStoredOnTrack  Time elapsed: 0.001 s  <<< FAILURE!
 org.opentest4j.AssertionFailedError: expected: <10> but was: <11>
 	at edu.montana.csci.csci440.model.TrackTest.testAlbumNameIsStoredOnTrack(TrackTest.java:96)
 
@@ -72,11 +72,11 @@ org.opentest4j.AssertionFailedError: expected: <10> but was: <11>
 java.lang.NullPointerException: Cannot invoke "java.util.List.size()" because "all" is null
 	at edu.montana.csci.csci440.model.TrackTest.testAllLoadsAllAlbums(TrackTest.java:16)
 
-[ERROR] trackCountIsCachedInRedis  Time elapsed: 0.003 s  <<< FAILURE!
+[ERROR] trackCountIsCachedInRedis  Time elapsed: 0.002 s  <<< FAILURE!
 org.opentest4j.AssertionFailedError: expected: <34> but was: <35>
 	at edu.montana.csci.csci440.model.TrackTest.trackCountIsCachedInRedis(TrackTest.java:120)
 
-[ERROR] testPagingWorks  Time elapsed: 0.001 s  <<< ERROR!
+[ERROR] testPagingWorks  Time elapsed: 0.002 s  <<< ERROR!
 java.lang.NullPointerException: Cannot invoke "java.util.List.size()" because the return value of "edu.montana.csci.csci440.model.Track.all(int, int)" is null
 	at edu.montana.csci.csci440.model.TrackTest.testPagingWorks(TrackTest.java:21)
 
@@ -95,7 +95,7 @@ Resetting DB After Test...
 Resetting DB After Test...
 Resetting DB After Test...
 Resetting DB After Test...
-[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in edu.montana.csci.csci440.model.AlbumTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s - in edu.montana.csci.csci440.model.AlbumTest
 [INFO] Running edu.montana.csci.csci440.model.EmployeeTest
 database in auto-commit mode
 0
@@ -108,7 +108,7 @@ Resetting DB After Test...
 Resetting DB After Test...
 3
 Resetting DB After Test...
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s - in edu.montana.csci.csci440.model.EmployeeTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in edu.montana.csci.csci440.model.EmployeeTest
 [INFO] Running edu.montana.csci.csci440.model.ArtistTest
 1
 Resetting DB After Test...
@@ -119,12 +119,12 @@ Resetting DB After Test...
 1
 0
 Resetting DB After Test...
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s - in edu.montana.csci.csci440.model.ArtistTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s - in edu.montana.csci.csci440.model.ArtistTest
 [INFO] Running edu.montana.csci.csci440.model.CustomerTest
 Resetting DB After Test...
 Resetting DB After Test...
 Resetting DB After Test...
-[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s - in edu.montana.csci.csci440.model.CustomerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s - in edu.montana.csci.csci440.model.CustomerTest
 [INFO] 
 [INFO] Results:
 [INFO] 
@@ -141,8 +141,8 @@ Resetting DB After Test...
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  1.661 s
-[INFO] Finished at: 2023-11-15T20:40:34-07:00
+[INFO] Total time:  1.534 s
+[INFO] Finished at: 2023-11-16T12:38:50-07:00
 [INFO] ------------------------------------------------------------------------
 [ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.1:test (default-test) on project CSCI_440_Project: There are test failures.
 [ERROR] 
